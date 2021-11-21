@@ -1,7 +1,27 @@
-use ultimate_ttt::SuperBoard;
+use ultimate_ttt::*;
 
 fn main() {
-    println!("{}", std::mem::size_of::<SuperBoard>());
+    let mut superboard = [[None; 9]; 9];
+    let mut a = 0;
+    for board in &mut superboard {
+        for cell in board {
+            *cell = char::from_digit(a as u32 % 36, 36);
+            a += 1;
+        }
+    }
+
+    let sep = || println!("_____________________");
+
+    for i in 0..9 {
+        print_superboard(&superboard, Some(GamePrintGuides::Board(i)));
+        sep();
+    }
+
+    print_superboard(&superboard, None);
+    sep();
+
+    print_superboard(&superboard, Some(GamePrintGuides::Superboard));
+    sep();
 }
 
 // Interface idea:
