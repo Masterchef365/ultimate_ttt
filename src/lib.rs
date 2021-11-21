@@ -10,6 +10,30 @@ pub type Board = [Square; 9];
 /// Row-major board of boards
 pub type SuperBoard = [Board; 9];
 
+struct GameSetup {
+    /// The players in this game, ordered by who goes first.
+    players: Vec<Player>,
+}
+
+struct Move {
+    /// If the user has the choice to pick the superboard square of their next move, this is Some(index) and otherwise None
+    superboard: Option<usize>,
+    /// Which square of the sub-board to make the move to 
+    board: usize,
+}
+
+struct GameState {
+    /// The board state
+    board: SuperBoard,
+    /// Index of the player from GameSetup::players who will make the next move
+    next_to_play: usize,
+}
+
+/// Return the successors of the current board state. Will return an empty vector if the game is finished.
+pub fn successors(state: &GameState, setup: &GameSetup) -> Vec<Move> {
+    
+}
+
 pub fn row_is_won(row: [Square; 3]) -> Option<Player> {
     row[0].and_then(|player| (row[1] == row[0] && row[2] == row[0]).then(|| player))
 }
@@ -24,9 +48,9 @@ pub fn is_board_won(board: &Board) -> Option<Player> {
 
     for col_idx in 0..3 {
         let row = [
-            board[3*0 + col_idx],
-            board[3*1 + col_idx],
-            board[3*2 + col_idx],
+            board[3 * 0 + col_idx],
+            board[3 * 1 + col_idx],
+            board[3 * 2 + col_idx],
         ];
         let ret = row_is_won(row);
         if ret.is_some() {
@@ -34,22 +58,14 @@ pub fn is_board_won(board: &Board) -> Option<Player> {
         }
     }
 
-    let row = [
-        board[3*0 + 0],
-        board[3*1 + 1],
-        board[3*2 + 2],
-    ];
+    let row = [board[3 * 0 + 0], board[3 * 1 + 1], board[3 * 2 + 2]];
 
     let ret = row_is_won(row);
     if ret.is_some() {
         return ret;
     }
 
-    let row = [
-        board[3*0 + 2],
-        board[3*1 + 1],
-        board[3*2 + 0],
-    ];
+    let row = [board[3 * 0 + 2], board[3 * 1 + 1], board[3 * 2 + 0]];
 
     let ret = row_is_won(row);
     if ret.is_some() {
@@ -75,152 +91,76 @@ mod tests {
     #[test]
     fn test_is_board_won() {
         assert!(is_board_won(&board_shorthand([
-            '-', '-', '-', 
-            '-', '-', '-', 
-            '-', '-', '-', 
-        ])).is_none());
+            '-', '-', '-', '-', '-', '-', '-', '-', '-',
+        ]))
+        .is_none());
 
         assert!(is_board_won(&board_shorthand([
-            '-', '-', '-', 
-            '-', 'X', '-', 
-            '-', '-', '-', 
-        ])).is_none());
+            '-', '-', '-', '-', 'X', '-', '-', '-', '-',
+        ]))
+        .is_none());
 
         assert!(is_board_won(&board_shorthand([
-            'O', '-', '-', 
-            '-', 'X', '-', 
-            '-', '-', 'O', 
-        ])).is_none());
+            'O', '-', '-', '-', 'X', '-', '-', '-', 'O',
+        ]))
+        .is_none());
 
         assert!(is_board_won(&board_shorthand([
-            'X', '-', 'X', 
-            '-', 'X', '-', 
-            '-', '-', 'O', 
-        ])).is_none());
+            'X', '-', 'X', '-', 'X', '-', '-', '-', 'O',
+        ]))
+        .is_none());
 
-        assert!(is_board_won(&board_shorthand([
-            'X', '-', 'X', 
-            '-', 'X', '-', 
-            '-', '-', 'X', 
-        ])) == Some('X'));
+        assert!(
+            is_board_won(&board_shorthand([
+                'X', '-', 'X', '-', 'X', '-', '-', '-', 'X',
+            ])) == Some('X')
+        );
 
-        assert!(is_board_won(&board_shorthand([
-            'O', '-', 'X', 
-            '-', 'X', '-', 
-            'X', '-', 'X', 
-        ])) == Some('X'));
+        assert!(
+            is_board_won(&board_shorthand([
+                'O', '-', 'X', '-', 'X', '-', 'X', '-', 'X',
+            ])) == Some('X')
+        );
 
-        assert!(is_board_won(&board_shorthand([
-            'O', '-', 'X', 
-            '-', 'X', 'X', 
-            'O', '-', 'X', 
-        ])) == Some('X'));
+        assert!(
+            is_board_won(&board_shorthand([
+                'O', '-', 'X', '-', 'X', 'X', 'O', '-', 'X',
+            ])) == Some('X')
+        );
 
-        assert!(is_board_won(&board_shorthand([
-            'X', 'X', 'X', 
-            '-', 'O', '-', 
-            'O', '-', '-', 
-        ])) == Some('X'));
+        assert!(
+            is_board_won(&board_shorthand([
+                'X', 'X', 'X', '-', 'O', '-', 'O', '-', '-',
+            ])) == Some('X')
+        );
     }
 
     #[test]
     fn test_is_super_board_won() {
         let superboard = [
-            board_shorthand([
-                'X', 'X', 'X', 
-                '-', 'O', '-', 
-                'O', '-', '-', 
-            ]),
-            board_shorthand([
-                'X', 'X', 'X', 
-                '-', 'O', '-', 
-                'O', '-', '-', 
-            ]),
-            board_shorthand([
-                'X', 'X', 'X', 
-                '-', 'O', '-', 
-                'O', '-', '-', 
-            ]),
-            board_shorthand([
-                'X', 'O', 'X', 
-                '-', 'O', '-', 
-                'O', '-', '-', 
-            ]),
-            board_shorthand([
-                'X', 'O', 'X', 
-                '-', 'O', '-', 
-                'O', '-', '-', 
-            ]),
-            board_shorthand([
-                'X', 'O', 'X', 
-                '-', 'O', '-', 
-                'O', '-', '-', 
-            ]),
-            board_shorthand([
-                'X', 'O', 'X', 
-                '-', 'O', '-', 
-                'O', '-', '-', 
-            ]),
-            board_shorthand([
-                'X', 'O', 'X', 
-                '-', 'O', '-', 
-                'O', '-', '-', 
-            ]),
-            board_shorthand([
-                'X', 'X', 'X', 
-                '-', 'O', '-', 
-                'O', '-', '-', 
-            ]),
+            board_shorthand(['X', 'X', 'X', '-', 'O', '-', 'O', '-', '-']),
+            board_shorthand(['X', 'X', 'X', '-', 'O', '-', 'O', '-', '-']),
+            board_shorthand(['X', 'X', 'X', '-', 'O', '-', 'O', '-', '-']),
+            board_shorthand(['X', 'O', 'X', '-', 'O', '-', 'O', '-', '-']),
+            board_shorthand(['X', 'O', 'X', '-', 'O', '-', 'O', '-', '-']),
+            board_shorthand(['X', 'O', 'X', '-', 'O', '-', 'O', '-', '-']),
+            board_shorthand(['X', 'O', 'X', '-', 'O', '-', 'O', '-', '-']),
+            board_shorthand(['X', 'O', 'X', '-', 'O', '-', 'O', '-', '-']),
+            board_shorthand(['X', 'X', 'X', '-', 'O', '-', 'O', '-', '-']),
         ];
 
         assert_eq!(is_superboard_won(&superboard), Some('X'));
 
         let superboard = [
-            board_shorthand([
-                'X', 'X', 'X', 
-                '-', 'O', '-', 
-                'O', '-', '-', 
-            ]),
-            board_shorthand([
-                'X', '-', 'X', 
-                '-', 'O', '-', 
-                'O', '-', '-', 
-            ]),
-            board_shorthand([
-                'X', 'O', 'X', 
-                '-', 'O', '-', 
-                'O', '-', '-', 
-            ]),
-            board_shorthand([
-                'X', 'X', 'X', 
-                '-', 'O', '-', 
-                'O', '-', '-', 
-            ]),
-            board_shorthand([
-                'X', 'O', 'X', 
-                '-', 'O', '-', 
-                'O', '-', '-', 
-            ]),
-            board_shorthand([
-                'X', 'X', 'X', 
-                '-', 'O', '-', 
-                'O', '-', '-', 
-            ]),
-            board_shorthand([
-                'X', '-', 'X', 
-                '-', 'O', '-', 
-                'O', '-', '-', 
-            ]),
-            board_shorthand([
-                'X', 'X', 'X', 
-                '-', 'O', '-', 
-                'O', '-', '-', 
-            ]),
-            board_shorthand([
-                'X', '-', 'X', 
-                '-', 'O', '-', 
-                'O', '-', '-', 
-            ]),
+            board_shorthand(['X', 'X', 'X', '-', 'O', '-', 'O', '-', '-']),
+            board_shorthand(['X', '-', 'X', '-', 'O', '-', 'O', '-', '-']),
+            board_shorthand(['X', 'O', 'X', '-', 'O', '-', 'O', '-', '-']),
+            board_shorthand(['X', 'X', 'X', '-', 'O', '-', 'O', '-', '-']),
+            board_shorthand(['X', 'O', 'X', '-', 'O', '-', 'O', '-', '-']),
+            board_shorthand(['X', 'X', 'X', '-', 'O', '-', 'O', '-', '-']),
+            board_shorthand(['X', '-', 'X', '-', 'O', '-', 'O', '-', '-']),
+            board_shorthand(['X', 'X', 'X', '-', 'O', '-', 'O', '-', '-']),
+            board_shorthand(['X', '-', 'X', '-', 'O', '-', 'O', '-', '-']),
         ];
 
         assert!(is_superboard_won(&superboard).is_none());
