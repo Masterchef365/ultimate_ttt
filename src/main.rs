@@ -10,18 +10,24 @@ fn main() {
         }
     }
 
-    let sep = || println!("_____________________");
+    loop {
+        let sep = || {
+            std::thread::sleep(std::time::Duration::from_millis(600));
+            println!("\x1B[2J\x1B[1;1H");
+            //println!("_____________________");
+        };
 
-    for i in 0..9 {
-        print_superboard(&superboard, Some(GamePrintGuides::Board(i)));
+        for i in 0..9 {
+            print_superboard(&superboard, Some(GamePrintGuides::Board(i)));
+            sep();
+        }
+
+        print_superboard(&superboard, None);
+        sep();
+
+        print_superboard(&superboard, Some(GamePrintGuides::Superboard));
         sep();
     }
-
-    print_superboard(&superboard, None);
-    sep();
-
-    print_superboard(&superboard, Some(GamePrintGuides::Superboard));
-    sep();
 }
 
 // Interface idea:
