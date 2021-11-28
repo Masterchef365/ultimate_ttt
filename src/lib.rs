@@ -10,10 +10,7 @@ pub type Board = [Square; 9];
 /// Row-major board of boards
 pub type SuperBoard = [Board; 9];
 
-pub struct GameSetup {
-    /// The players in this game, ordered by who goes first.
-    players: Vec<Player>,
-}
+pub const NEW_GAME_BOARD: SuperBoard = [[None; 9]; 9];
 
 #[derive(Copy, Clone, Debug)]
 pub struct Move {
@@ -23,7 +20,7 @@ pub struct Move {
     board: usize,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct GameState {
     /// The board state
     pub superboard: SuperBoard,
@@ -31,6 +28,8 @@ pub struct GameState {
     pub next_to_play: usize,
     /// If any, the index of the superboard square the player has been sent to.
     pub sent_to: Option<usize>,
+    /// The players in this game, ordered by who goes first.
+    pub players: Vec<Player>,
 }
 
 /// Return the successors of the current board state. Will return an empty vector if the game is finished.
@@ -59,7 +58,16 @@ pub fn successors(state: &GameState) -> Vec<Move> {
 }
 
 impl GameState {
-    pub fn apply_move(&self, mov: Move, setup: &GameSetup) -> Self {
+    pub fn new(players: Vec<Player>) -> Self {
+        Self {
+            superboard: NEW_GAME_BOARD,
+            next_to_play: 0,
+            sent_to: None,
+            players,
+        }
+    }
+
+    pub fn apply_move(&self, mov: Move) -> Self {
         // Check if the superboard move is legal
         let board_idx = match (self.sent_to, mov.superboard) {
             (Some(i), None) | (None, Some(i)) => i,
@@ -74,7 +82,7 @@ impl GameState {
         }
 
         // Make the move
-        let player = setup.players[self.next_to_play];
+        let player = self.players[self.next_to_play];
         board[mov.board] = Some(player);
 
         let mut superboard = self.superboard;
@@ -87,12 +95,13 @@ impl GameState {
             .then(|| mov.board);
 
         // Calculate the next player
-        let next_to_play = (self.next_to_play + 1) % setup.players.len();
+        let next_to_play = (self.next_to_play + 1) % self.players.len();
 
         Self {
             superboard,
             next_to_play,
             sent_to,
+            players: self.players.clone()
         }
     }
 }
@@ -244,11 +253,11 @@ pub enum GamePrintGuides {
     Board(usize),
 }
 
-pub fn print_game_state(state: &GameState, guides: Option<GamePrintGuides>, setup: &GameSetup) {
+pub fn print_game_state(state: &GameState, guides: Option<GamePrintGuides>) {
     if let Some(winner) = is_superboard_won(&state.superboard) {
         println!("{} won.", winner);
     } else {
-        println!("{} to play.", setup.players[state.next_to_play]);
+        println!("{} to play.", state.players[state.next_to_play]);
     }
 
     print_superboard(&state.superboard, guides);

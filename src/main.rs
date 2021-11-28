@@ -1,38 +1,24 @@
-use std::{fmt::Display, io::Write};
+use std::{collections::VecDeque, fmt::Display, io::Write};
 use ultimate_ttt::*;
 
 fn main() {
-    let an_int: u32 = prompt_parse("Please enter a u32", |s| s.parse().ok());
-    dbg!(an_int);
-    /*
-    let mut superboard = [[None; 9]; 9];
-    let mut a = 0;
-    for board in &mut superboard {
-        for cell in board {
-            *cell = char::from_digit(a as u32 % 36, 36);
-            a += 1;
+    let mut queue = vec![];
+    queue.push(GameState::new(vec!['X', 'O', 'R']));
+    let mut i = 1;
+    while let Some(state) = queue.pop() {
+        queue.extend(
+            successors(&state)
+                .into_iter()
+                .map(|mov| state.apply_move(mov)),
+        );
+        if let Some('O' | 'R') = is_superboard_won(&state.superboard) {
+            print_game_state(&state, None);
+            i += 1;
+        }
+        if i % 50000 == 0 {
+            println!("{}", i);
         }
     }
-
-    loop {
-        let sep = || {
-            std::thread::sleep(std::time::Duration::from_millis(600));
-            println!("\x1B[2J\x1B[1;1H");
-            //println!("_____________________");
-        };
-
-        for i in 0..9 {
-            print_superboard(&superboard, Some(GamePrintGuides::Board(i)));
-            sep();
-        }
-
-        print_superboard(&superboard, None);
-        sep();
-
-        print_superboard(&superboard, Some(GamePrintGuides::Superboard));
-        sep();
-    }
-    */
 }
 
 fn prompt_parse<T>(msg: impl Display + Copy, parser: fn(String) -> Option<T>) -> T {
@@ -45,9 +31,7 @@ fn prompt_parse<T>(msg: impl Display + Copy, parser: fn(String) -> Option<T>) ->
 
 fn prompt_string(msg: impl Display) -> String {
     print!("{}: ", msg);
-    std::io::stdout()
-        .flush()
-        .expect("IO flush failed");
+    std::io::stdout().flush().expect("IO flush failed");
 
     let mut line = String::new();
     std::io::stdin()
@@ -56,3 +40,5 @@ fn prompt_string(msg: impl Display) -> String {
 
     line.trim_end().to_string()
 }
+
+//let an_int: u32 = prompt_parse("Please enter a u32", |s| s.parse().ok());
