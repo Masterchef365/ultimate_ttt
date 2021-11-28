@@ -1,41 +1,49 @@
-use std::{collections::VecDeque, fmt::Display, io::Write};
+use std::{fmt::Display, io::Write};
 use ultimate_ttt::*;
 
 fn main() {
-    let mut queue = vec![];
-    queue.push(GameState::new(vec!['X', 'O', 'R']));
-    let mut i = 1;
-    while let Some(state) = queue.pop() {
-        queue.extend(
-            successors(&state)
-                .into_iter()
-                .map(|mov| state.apply_move(mov)),
-        );
-        if let Some('O' | 'R') = is_superboard_won(&state.superboard) {
+    let mut state = GameState::new(vec!['X', 'O']);
+    loop {
+        let mov = human_player(&state);
+        state = state.apply_move(mov);
+
+        if let Some(winner) = is_superboard_won(&state.superboard) {
+            println!("{} wins!", winner);
             print_game_state(&state, None);
-            i += 1;
-        }
-        if i % 50000 == 0 {
-            println!("{}", i);
+            break;
         }
     }
 }
 
 fn human_player(state: &GameState) -> Move {
-    todo!()
-    /*
-    let board_idx = None;
-    if state.sent_to.is_none() {
-        print_game_state(state, Some(GamePrintGuides::Superboard));
-        prompt_parse("Please pick", |s| s)
-        board_idx = Some();
+    let succ = successors(&state);
+    print!("Possible moves are: ");
+    for &mov in &succ {
+        print!("{}, ", fmt_move(mov));
     }
+    println!();
 
-    Move {
-        superboard: board_idx,
-        board,
+    loop {
+        let mut picked_superboard_idx = None;
+        if state.sent_to.is_none() {
+            print_game_state(state, Some(GamePrintGuides::Superboard));
+            picked_superboard_idx = Some(prompt_parse("Please pick a sub-board", parse_coord));
+        }
+
+        let superboard_idx = picked_superboard_idx.or(state.sent_to).unwrap();
+        print_game_state(state, Some(GamePrintGuides::Board(superboard_idx)));
+        let board_idx = prompt_parse("Please pick a square on the sub-board", parse_coord);
+
+        let mov = Move {
+            superboard: picked_superboard_idx,
+            board: board_idx,
+        };
+        if succ.contains(&mov) {
+            break mov;
+        } else {
+            println!("Invalid move!");
+        }
     }
-    */
 }
 
 fn parse_coord(s: String) -> Option<usize> {
@@ -55,7 +63,7 @@ fn parse_coord(s: String) -> Option<usize> {
     let idx = (row * 3 + col) as usize;
 
     Some(idx)
-} 
+}
 
 fn prompt_parse<T>(msg: impl Display + Copy, parser: fn(String) -> Option<T>) -> T {
     loop {

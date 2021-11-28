@@ -12,12 +12,12 @@ pub type SuperBoard = [Board; 9];
 
 pub const NEW_GAME_BOARD: SuperBoard = [[None; 9]; 9];
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Move {
     /// If the user has the choice to pick the superboard square of their next move, this is Some(index) and otherwise None
-    superboard: Option<usize>,
+    pub superboard: Option<usize>,
     /// Which square of the sub-board to make the move to
-    board: usize,
+    pub board: usize,
 }
 
 #[derive(Clone, Debug)]
@@ -289,10 +289,10 @@ pub fn print_superboard(superboard: &SuperBoard, guides: Option<GamePrintGuides>
                 let superboard_idx = superboard_row_idx * 3 + superboard_column_idx;
                 match guides {
                     Some(GamePrintGuides::Board(board_idx)) if superboard_idx == board_idx => {
-                        print!(" {}", board_row);
+                        print!(" {}", board_row + 1);
                     }
                     Some(GamePrintGuides::Superboard) if board_row == 1 && superboard_column_idx == 0 => {
-                        print!("{} ", superboard_row_idx);
+                        print!("{} ", superboard_row_idx + 1);
                     }
                     _ => print!("  "),
                 }
@@ -305,4 +305,21 @@ pub fn print_superboard(superboard: &SuperBoard, guides: Option<GamePrintGuides>
             println!();
         }
     }
+}
+
+fn coord_to_chars(c: usize) -> [char; 2] {
+    [
+        ((c % 3) as u8 + 'A' as u8) as char,
+        ((c / 3) as u8 + '1' as u8) as char,
+    ]
+}
+
+pub fn fmt_move(mov: Move) -> String {
+    let mut s = String::new();
+    if let Some(superboard) = mov.superboard {
+        s.extend(coord_to_chars(superboard));
+        s.push('>');
+    }
+    s.extend(coord_to_chars(mov.board));
+    s
 }
