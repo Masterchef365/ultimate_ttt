@@ -2,7 +2,7 @@ use std::{fmt::Display, io::Write};
 use ultimate_ttt::*;
 
 fn main() {
-    let an_int: u32 = prompt_valid("Please enter a u32", |s| s.parse().ok());
+    let an_int: u32 = prompt_parse("Please enter a u32", |s| s.parse().ok());
     dbg!(an_int);
     /*
     let mut superboard = [[None; 9]; 9];
@@ -35,9 +35,9 @@ fn main() {
     */
 }
 
-fn prompt_valid<T>(msg: impl Display + Copy, validation: fn(String) -> Option<T>) -> T {
+fn prompt_parse<T>(msg: impl Display + Copy, parser: fn(String) -> Option<T>) -> T {
     loop {
-        if let Some(val) = validation(prompt_string(msg)) {
+        if let Some(val) = parser(prompt_string(msg)) {
             break val;
         }
     }
