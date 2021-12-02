@@ -10,7 +10,8 @@ pub type Board = [Square; 9];
 /// Row-major board of boards
 pub type SuperBoard = [Board; 9];
 
-pub const NEW_GAME_BOARD: SuperBoard = [[None; 9]; 9];
+pub const EMPTY_BOARD: Board = [None; 9];
+pub const EMPTY_SUPERBOARD: SuperBoard = [EMPTY_BOARD; 9];
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Move {
@@ -60,7 +61,7 @@ pub fn successors(state: &GameState) -> Vec<Move> {
 impl GameState {
     pub fn new(players: Vec<Player>) -> Self {
         Self {
-            superboard: NEW_GAME_BOARD,
+            superboard: EMPTY_SUPERBOARD,
             next_to_play: 0,
             sent_to: None,
             players,
