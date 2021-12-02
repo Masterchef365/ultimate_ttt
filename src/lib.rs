@@ -12,6 +12,7 @@ pub type SuperBoard = [Board; 9];
 
 pub const EMPTY_BOARD: Board = [None; 9];
 pub const EMPTY_SUPERBOARD: SuperBoard = [EMPTY_BOARD; 9];
+pub const MAX_PLAYERS: usize = 8;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Move {
@@ -21,16 +22,19 @@ pub struct Move {
     pub board: usize,
 }
 
-#[derive(Clone, Debug)]
+// TODO: Make all usize u8
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub struct GameState {
     /// The board state
     pub superboard: SuperBoard,
     /// Index of the player from GameSetup::players who will make the next move
     pub next_to_play: usize,
     /// If any, the index of the superboard square the player has been sent to.
-    pub sent_to: Option<usize>,
+    pub sent_to: Option<usize>, 
     /// The players in this game, ordered by who goes first.
-    pub players: Vec<Player>,
+    pub players: [Player; 8], // TODO: Try using a Vec<> and profiling...
+    /// Number of players
+    pub num_players: usize,
 }
 
 /// Return the successors of the current board state. Will return an empty vector if the game is finished.
@@ -59,12 +63,17 @@ pub fn successors(state: &GameState) -> Vec<Move> {
 }
 
 impl GameState {
-    pub fn new(players: Vec<Player>) -> Self {
+    pub fn new(players: &[Player]) -> Self {
+        let mut players_array = ['*'; MAX_PLAYERS];
+        assert!(players.len() <= MAX_PLAYERS, "MAX_PLAYERS ({}) exceeded.", MAX_PLAYERS);
+        players_array[..players.len()].copy_from_slice(players);
+
         Self {
             superboard: EMPTY_SUPERBOARD,
             next_to_play: 0,
             sent_to: None,
-            players,
+            players: players_array,
+            num_players: players.len(),
         }
     }
 
@@ -100,13 +109,14 @@ impl GameState {
             .then(|| mov.board);
 
         // Calculate the next player
-        let next_to_play = (self.next_to_play + 1) % self.players.len();
+        let next_to_play = (self.next_to_play + 1) % self.num_players;
 
         Self {
             superboard,
             next_to_play,
             sent_to,
-            players: self.players.clone()
+            players: self.players,
+            num_players: self.num_players,
         }
     }
 }
