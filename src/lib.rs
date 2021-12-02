@@ -68,6 +68,10 @@ impl GameState {
         }
     }
 
+    pub fn next_to_play(&self) -> Player {
+        self.players[self.next_to_play]
+    }
+
     pub fn apply_move(&self, mov: Move) -> Self {
         // Check if the superboard move is legal
         let board_idx = match (self.sent_to, mov.superboard) {

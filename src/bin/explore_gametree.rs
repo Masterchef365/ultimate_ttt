@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use ultimate_ttt::{open_board_squares, Board, EMPTY_BOARD};
+use ultimate_ttt::{open_board_squares, Board, EMPTY_BOARD, SuperBoard, GameState, print_superboard, EMPTY_SUPERBOARD, GamePrintGuides};
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
 struct SingleBoardState {
@@ -24,12 +24,28 @@ impl SingleBoardState {
         self.x_is_next = !self.x_is_next;
         self
     }
+
+    pub fn from_board(board: Board, x_is_next: bool) -> Self {
+        Self {
+            board,
+            x_is_next
+        }
+        
+    }
+}
+
+fn display_single_board(board: Board) {
+    let mut superboard = EMPTY_SUPERBOARD;
+    superboard[0] = board;
+    print_superboard(&superboard, Some(GamePrintGuides::Board(0)))
 }
 
 fn main() {
     let mut tree = HashMap::new();
     let mut queue = vec![SingleBoardState::new()];
     while let Some(state) = queue.pop() {
+        display_single_board(state.board);
+        println!("--------------------------------------------------");
         if !tree.contains_key(&state) {
             let successor_states: Vec<SingleBoardState> = open_board_squares(state.board)
                 .map(|mov| state.apply(mov))
@@ -38,5 +54,4 @@ fn main() {
             tree.insert(state, successor_states);
         }
     }
-    dbg!(tree);
 }
