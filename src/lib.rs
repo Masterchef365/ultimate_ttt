@@ -1,5 +1,5 @@
 /// A Player
-pub type Player = char;
+pub type Player = u8;
 
 /// One square on a board
 pub type Square = Option<Player>;
@@ -12,7 +12,7 @@ pub type SuperBoard = [Board; 9];
 
 pub const EMPTY_BOARD: Board = [None; 9];
 pub const EMPTY_SUPERBOARD: SuperBoard = [EMPTY_BOARD; 9];
-pub const MAX_PLAYERS: usize = 8;
+pub const MAX_PLAYERS: usize = 4;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Move {
@@ -32,7 +32,7 @@ pub struct GameState {
     /// If any, the index of the superboard square the player has been sent to.
     pub sent_to: Option<usize>, 
     /// The players in this game, ordered by who goes first.
-    pub players: [Player; 8], // TODO: Try using a Vec<> and profiling...
+    pub players: [Player; MAX_PLAYERS], // TODO: Try using a Vec<> and profiling...
     /// Number of players
     pub num_players: usize,
 }
@@ -64,7 +64,7 @@ pub fn successors(state: &GameState) -> Vec<Move> {
 
 impl GameState {
     pub fn new(players: &[Player]) -> Self {
-        let mut players_array = ['*'; MAX_PLAYERS];
+        let mut players_array = [b'*'; MAX_PLAYERS];
         assert!(players.len() <= MAX_PLAYERS, "MAX_PLAYERS ({}) exceeded.", MAX_PLAYERS);
         players_array[..players.len()].copy_from_slice(players);
 
@@ -175,8 +175,8 @@ pub fn is_superboard_won(superboard: &SuperBoard) -> Option<Player> {
 }
 
 /// Parse an array of characters into a board
-pub fn board_shorthand(chars: [char; 9]) -> Board {
-    chars.map(|c| (c != '-').then(|| c))
+pub fn board_shorthand(chars: [u8; 9]) -> Board {
+    chars.map(|c| (c != b'-').then(|| c))
 }
 
 #[cfg(test)]
@@ -185,77 +185,77 @@ mod tests {
 
     #[test]
     fn test_is_board_won() {
-        assert!(is_board_won(&board_shorthand([
-            '-', '-', '-', '-', '-', '-', '-', '-', '-',
-        ]))
+        assert!(is_board_won(&board_shorthand(
+            *b"---------"
+        ))
         .is_none());
 
-        assert!(is_board_won(&board_shorthand([
-            '-', '-', '-', '-', 'X', '-', '-', '-', '-',
-        ]))
+        assert!(is_board_won(&board_shorthand(
+            *b"----X----"
+        ))
         .is_none());
 
-        assert!(is_board_won(&board_shorthand([
-            'O', '-', '-', '-', 'X', '-', '-', '-', 'O',
-        ]))
+        assert!(is_board_won(&board_shorthand(
+            *b"O---X---O"
+        ))
         .is_none());
 
-        assert!(is_board_won(&board_shorthand([
-            'X', '-', 'X', '-', 'X', '-', '-', '-', 'O',
-        ]))
+        assert!(is_board_won(&board_shorthand(
+*b"X-X-X---O"
+))
         .is_none());
 
         assert!(
-            is_board_won(&board_shorthand([
-                'X', '-', 'X', '-', 'X', '-', '-', '-', 'X',
-            ])) == Some('X')
+            is_board_won(&board_shorthand(
+*b"X-X-X---X"
+))==Some(b'X')
         );
 
         assert!(
-            is_board_won(&board_shorthand([
-                'O', '-', 'X', '-', 'X', '-', 'X', '-', 'X',
-            ])) == Some('X')
+            is_board_won(&board_shorthand(
+*b"O-X-X-X-X"
+))==Some(b'X')
         );
 
         assert!(
-            is_board_won(&board_shorthand([
-                'O', '-', 'X', '-', 'X', 'X', 'O', '-', 'X',
-            ])) == Some('X')
+            is_board_won(&board_shorthand(
+*b"O-X-XXO-X"
+))==Some(b'X')
         );
 
         assert!(
-            is_board_won(&board_shorthand([
-                'X', 'X', 'X', '-', 'O', '-', 'O', '-', '-',
-            ])) == Some('X')
+            is_board_won(&board_shorthand(
+*b"XXX-O-O--"
+))==Some(b'X')
         );
     }
 
     #[test]
     fn test_is_super_board_won() {
         let superboard = [
-            board_shorthand(['X', 'X', 'X', '-', 'O', '-', 'O', '-', '-']),
-            board_shorthand(['X', 'X', 'X', '-', 'O', '-', 'O', '-', '-']),
-            board_shorthand(['X', 'X', 'X', '-', 'O', '-', 'O', '-', '-']),
-            board_shorthand(['X', 'O', 'X', '-', 'O', '-', 'O', '-', '-']),
-            board_shorthand(['X', 'O', 'X', '-', 'O', '-', 'O', '-', '-']),
-            board_shorthand(['X', 'O', 'X', '-', 'O', '-', 'O', '-', '-']),
-            board_shorthand(['X', 'O', 'X', '-', 'O', '-', 'O', '-', '-']),
-            board_shorthand(['X', 'O', 'X', '-', 'O', '-', 'O', '-', '-']),
-            board_shorthand(['X', 'X', 'X', '-', 'O', '-', 'O', '-', '-']),
+            board_shorthand(*b"XXX-O-O--"),
+            board_shorthand(*b"XXX-O-O--"),
+            board_shorthand(*b"XXX-O-O--"),
+            board_shorthand(*b"XOX-O-O--"),
+            board_shorthand(*b"XOX-O-O--"),
+            board_shorthand(*b"XOX-O-O--"),
+            board_shorthand(*b"XOX-O-O--"),
+            board_shorthand(*b"XOX-O-O--"),
+            board_shorthand(*b"XXX-O-O--"),
         ];
 
-        assert_eq!(is_superboard_won(&superboard), Some('X'));
+        assert_eq!(is_superboard_won(&superboard), Some(b'X'));
 
         let superboard = [
-            board_shorthand(['X', 'X', 'X', '-', 'O', '-', 'O', '-', '-']),
-            board_shorthand(['X', '-', 'X', '-', 'O', '-', 'O', '-', '-']),
-            board_shorthand(['X', 'O', 'X', '-', 'O', '-', 'O', '-', '-']),
-            board_shorthand(['X', 'X', 'X', '-', 'O', '-', 'O', '-', '-']),
-            board_shorthand(['X', 'O', 'X', '-', 'O', '-', 'O', '-', '-']),
-            board_shorthand(['X', 'X', 'X', '-', 'O', '-', 'O', '-', '-']),
-            board_shorthand(['X', '-', 'X', '-', 'O', '-', 'O', '-', '-']),
-            board_shorthand(['X', 'X', 'X', '-', 'O', '-', 'O', '-', '-']),
-            board_shorthand(['X', '-', 'X', '-', 'O', '-', 'O', '-', '-']),
+            board_shorthand(*b"XXX-O-O--"),
+            board_shorthand(*b"X-X-O-O--"),
+            board_shorthand(*b"XOX-O-O--"),
+            board_shorthand(*b"XXX-O-O--"),
+            board_shorthand(*b"XOX-O-O--"),
+            board_shorthand(*b"XXX-O-O--"),
+            board_shorthand(*b"X-X-O-O--"),
+            board_shorthand(*b"XXX-O-O--"),
+            board_shorthand(*b"X-X-O-O--"),
         ];
 
         assert!(is_superboard_won(&superboard).is_none());
@@ -314,7 +314,7 @@ pub fn print_superboard(superboard: &SuperBoard, guides: Option<GamePrintGuides>
 
                 let board = superboard_row[superboard_column_idx];
                 let row = &board[board_row * 3..][..3];
-                let disp = |i: usize| row[i].unwrap_or('-');
+                let disp = |i: usize| row[i].unwrap_or(b'-');
                 print!("{} {} {}", disp(0), disp(1), disp(2));
             }
             println!();

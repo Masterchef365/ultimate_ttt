@@ -20,7 +20,7 @@ impl SingleBoardState {
             panic!("Illegal move");
         }*/
 
-        self.board[mov] = Some(if self.x_is_next { 'X' } else { 'O' });
+        self.board[mov] = Some(if self.x_is_next { b'X' } else { b'O' });
         self.x_is_next = !self.x_is_next;
         self
     }
@@ -42,7 +42,7 @@ fn display_single_board(board: Board) {
 
 fn main() {
     let mut tree = HashMap::new();
-    let mut queue = vec![GameState::new(&['X', 'O'])];
+    let mut queue = vec![GameState::new(b"XO")];
     let mut i = 0;
     while let Some(state) = queue.pop() {
         //print_superboard(&state.superboard, Some(GamePrintGuides::Superboard));

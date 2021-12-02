@@ -2,7 +2,7 @@ use std::{fmt::Display, io::Write};
 use ultimate_ttt::*;
 
 fn main() {
-    let mut state = GameState::new(&['X', 'O']);
+    let mut state = GameState::new(b"XO");
     loop {
         let mov = human_player(&state);
         state = state.apply_move(mov);
