@@ -1,3 +1,5 @@
+pub mod ai;
+
 /// A Player
 pub type Player = u8;
 
@@ -45,7 +47,13 @@ pub struct GameState {
 
 /// Return the successors of the given game state. Will return an empty vector if the game is finished.
 pub fn successors(state: &GameState) -> Vec<Move> {
+    // Game is already won
+    if is_superboard_won(&state.superboard).is_some() {
+        return vec![];
+    }
+
     if let Some(send) = state.sent_to {
+        // We've been sent to a specific square, make moves there
         open_board_squares(state.superboard[send])
             .map(|square| Move {
                 superboard: None,
@@ -53,6 +61,7 @@ pub fn successors(state: &GameState) -> Vec<Move> {
             })
             .collect()
     } else {
+        // Return moves for all possible squares
         state
             .superboard
             .iter()
@@ -204,9 +213,9 @@ pub enum GamePrintGuides {
 /// Print the given game state, optionally showing guides
 pub fn print_game_state(state: &GameState, guides: Option<GamePrintGuides>) {
     if let Some(winner) = is_superboard_won(&state.superboard) {
-        println!("{} won.", winner);
+        println!("{} won.", winner as char);
     } else {
-        println!("{} to play.", state.players[state.next_to_play]);
+        println!("{} to play.", state.players[state.next_to_play] as char);
     }
 
     print_superboard(&state.superboard, guides);
@@ -249,7 +258,7 @@ pub fn print_superboard(superboard: &SuperBoard, guides: Option<GamePrintGuides>
 
                 let board = superboard_row[superboard_column_idx];
                 let row = &board[board_row * 3..][..3];
-                let disp = |i: usize| row[i].unwrap_or(b'-');
+                let disp = |i: usize| row[i].unwrap_or(b'-') as char;
                 print!("{} {} {}", disp(0), disp(1), disp(2));
             }
             println!();
