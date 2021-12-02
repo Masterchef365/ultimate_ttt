@@ -10,10 +10,16 @@ pub type Board = [Square; 9];
 /// Row-major board of boards
 pub type SuperBoard = [Board; 9];
 
+/// An empty board
 pub const EMPTY_BOARD: Board = [None; 9];
+
+/// An empty superboard
 pub const EMPTY_SUPERBOARD: SuperBoard = [EMPTY_BOARD; 9];
+
+/// The maximum number of players in a game (used to set a constant-sized array in GameState)
 pub const MAX_PLAYERS: usize = 4;
 
+/// One move to be applied to a game state
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Move {
     /// If the user has the choice to pick the superboard square of their next move, this is Some(index) and otherwise None
@@ -22,22 +28,22 @@ pub struct Move {
     pub board: usize,
 }
 
-// TODO: Make all usize u8
+/// A single game state
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub struct GameState {
     /// The board state
     pub superboard: SuperBoard,
+    /// The players in this game, ordered by who goes first.
+    pub players: [Player; MAX_PLAYERS], // TODO: Try using a Vec<> and profiling...
     /// Index of the player from GameSetup::players who will make the next move
     pub next_to_play: usize,
     /// If any, the index of the superboard square the player has been sent to.
     pub sent_to: Option<usize>, 
-    /// The players in this game, ordered by who goes first.
-    pub players: [Player; MAX_PLAYERS], // TODO: Try using a Vec<> and profiling...
     /// Number of players
     pub num_players: usize,
 }
 
-/// Return the successors of the current board state. Will return an empty vector if the game is finished.
+/// Return the successors of the given game state. Will return an empty vector if the game is finished.
 pub fn successors(state: &GameState) -> Vec<Move> {
     if let Some(send) = state.sent_to {
         open_board_squares(state.superboard[send])
@@ -63,6 +69,7 @@ pub fn successors(state: &GameState) -> Vec<Move> {
 }
 
 impl GameState {
+    /// Create a new game given player symbols
     pub fn new(players: &[Player]) -> Self {
         let mut players_array = [b'*'; MAX_PLAYERS];
         assert!(players.len() <= MAX_PLAYERS, "MAX_PLAYERS ({}) exceeded.", MAX_PLAYERS);
@@ -77,12 +84,15 @@ impl GameState {
         }
     }
 
+    /// Returns the symbol of the next player to play
     pub fn next_to_play(&self) -> Player {
         self.players[self.next_to_play]
     }
 
+    /// Apply a move to this state. Checks whether the move is valid
     pub fn apply_move(&self, mov: Move) -> Self {
         // Check if the superboard move is legal
+        // TODO: Disable this in release mode?
         let board_idx = match (self.sent_to, mov.superboard) {
             (Some(i), None) | (None, Some(i)) => i,
             (Some(_), Some(_)) => panic!("Move included superboard index when not needed"),
@@ -129,10 +139,12 @@ pub fn open_board_squares(board: Board) -> impl Iterator<Item = usize> {
         .filter_map(|(idx, square)| (square == Square::None).then(|| idx))
 }
 
+/// Returns Some(winner) if these sequares are won  
 pub fn row_is_won(row: [Square; 3]) -> Option<Player> {
     row[0].and_then(|player| (row[1] == row[0] && row[2] == row[0]).then(|| player))
 }
 
+/// Returns Some(winner) if this board is won  
 pub fn is_board_won(board: &Board) -> Option<Player> {
     for row in board.chunks_exact(3) {
         let ret = row_is_won([row[0], row[1], row[2]]);
@@ -170,6 +182,7 @@ pub fn is_board_won(board: &Board) -> Option<Player> {
     None
 }
 
+/// Returns true if this superboard is won
 pub fn is_superboard_won(superboard: &SuperBoard) -> Option<Player> {
     is_board_won(&superboard.map(|b| is_board_won(&b)))
 }
@@ -177,6 +190,90 @@ pub fn is_superboard_won(superboard: &SuperBoard) -> Option<Player> {
 /// Parse an array of characters into a board
 pub fn board_shorthand(chars: [u8; 9]) -> Board {
     chars.map(|c| (c != b'-').then(|| c))
+}
+
+/// Printing options for game state
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum GamePrintGuides {
+    /// Print guides for the superboard
+    Superboard,
+    /// Print guides for the given square on the superboard
+    Board(usize),
+}
+
+/// Print the given game state, optionally showing guides
+pub fn print_game_state(state: &GameState, guides: Option<GamePrintGuides>) {
+    if let Some(winner) = is_superboard_won(&state.superboard) {
+        println!("{} won.", winner);
+    } else {
+        println!("{} to play.", state.players[state.next_to_play]);
+    }
+
+    print_superboard(&state.superboard, guides);
+}
+
+/// Print a superboard, optionally showing guides
+pub fn print_superboard(superboard: &SuperBoard, guides: Option<GamePrintGuides>) {
+    for (superboard_row_idx, superboard_row) in superboard.chunks_exact(3).enumerate() {
+        // Headers for this superboard row, if any
+        print!(" ");
+        for superboard_column_idx in 0..3 {
+            print!(" ");
+            let superboard_idx = superboard_row_idx * 3 + superboard_column_idx;
+            match guides {
+                Some(GamePrintGuides::Board(board_idx)) if board_idx == superboard_idx => {
+                    print!("A B C");
+                }
+                Some(GamePrintGuides::Superboard) if superboard_row_idx == 0 => {
+                    print!("  {}  ", ['A', 'B', 'C'][superboard_column_idx]);
+                }
+                _ => print!("     "),
+            }
+            print!(" ");
+        }
+        println!();
+
+        // Print board cells
+        for board_row in 0..3 {
+            for superboard_column_idx in 0..3 {
+                let superboard_idx = superboard_row_idx * 3 + superboard_column_idx;
+                match guides {
+                    Some(GamePrintGuides::Board(board_idx)) if superboard_idx == board_idx => {
+                        print!(" {}", board_row + 1);
+                    }
+                    Some(GamePrintGuides::Superboard) if board_row == 1 && superboard_column_idx == 0 => {
+                        print!("{} ", superboard_row_idx + 1);
+                    }
+                    _ => print!("  "),
+                }
+
+                let board = superboard_row[superboard_column_idx];
+                let row = &board[board_row * 3..][..3];
+                let disp = |i: usize| row[i].unwrap_or(b'-');
+                print!("{} {} {}", disp(0), disp(1), disp(2));
+            }
+            println!();
+        }
+    }
+}
+
+/// Convert a coordinate to it's character representation
+fn coord_to_chars(c: usize) -> [char; 2] {
+    [
+        ((c % 3) as u8 + 'A' as u8) as char,
+        ((c / 3) as u8 + '1' as u8) as char,
+    ]
+}
+
+/// Display a move as a string
+pub fn fmt_move(mov: Move) -> String {
+    let mut s = String::new();
+    if let Some(superboard) = mov.superboard {
+        s.extend(coord_to_chars(superboard));
+        s.push('>');
+    }
+    s.extend(coord_to_chars(mov.board));
+    s
 }
 
 #[cfg(test)]
@@ -260,81 +357,4 @@ mod tests {
 
         assert!(is_superboard_won(&superboard).is_none());
     }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum GamePrintGuides {
-    Superboard,
-    Board(usize),
-}
-
-pub fn print_game_state(state: &GameState, guides: Option<GamePrintGuides>) {
-    if let Some(winner) = is_superboard_won(&state.superboard) {
-        println!("{} won.", winner);
-    } else {
-        println!("{} to play.", state.players[state.next_to_play]);
-    }
-
-    print_superboard(&state.superboard, guides);
-}
-
-pub fn print_superboard(superboard: &SuperBoard, guides: Option<GamePrintGuides>) {
-    for (superboard_row_idx, superboard_row) in superboard.chunks_exact(3).enumerate() {
-        // Headers for this superboard row, if any
-        print!(" ");
-        for superboard_column_idx in 0..3 {
-            print!(" ");
-            let superboard_idx = superboard_row_idx * 3 + superboard_column_idx;
-            match guides {
-                Some(GamePrintGuides::Board(board_idx)) if board_idx == superboard_idx => {
-                    print!("A B C");
-                }
-                Some(GamePrintGuides::Superboard) if superboard_row_idx == 0 => {
-                    print!("  {}  ", ['A', 'B', 'C'][superboard_column_idx]);
-                }
-                _ => print!("     "),
-            }
-            print!(" ");
-        }
-        println!();
-
-        // Print board cells
-        for board_row in 0..3 {
-            for superboard_column_idx in 0..3 {
-                let superboard_idx = superboard_row_idx * 3 + superboard_column_idx;
-                match guides {
-                    Some(GamePrintGuides::Board(board_idx)) if superboard_idx == board_idx => {
-                        print!(" {}", board_row + 1);
-                    }
-                    Some(GamePrintGuides::Superboard) if board_row == 1 && superboard_column_idx == 0 => {
-                        print!("{} ", superboard_row_idx + 1);
-                    }
-                    _ => print!("  "),
-                }
-
-                let board = superboard_row[superboard_column_idx];
-                let row = &board[board_row * 3..][..3];
-                let disp = |i: usize| row[i].unwrap_or(b'-');
-                print!("{} {} {}", disp(0), disp(1), disp(2));
-            }
-            println!();
-        }
-    }
-}
-
-fn coord_to_chars(c: usize) -> [char; 2] {
-    [
-        ((c % 3) as u8 + 'A' as u8) as char,
-        ((c / 3) as u8 + '1' as u8) as char,
-    ]
-}
-
-pub fn fmt_move(mov: Move) -> String {
-    let mut s = String::new();
-    if let Some(superboard) = mov.superboard {
-        s.extend(coord_to_chars(superboard));
-        s.push('>');
-    }
-    s.extend(coord_to_chars(mov.board));
-    s
 }
