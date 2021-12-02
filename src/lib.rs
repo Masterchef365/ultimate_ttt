@@ -1,4 +1,5 @@
 pub mod ai;
+pub mod human;
 
 /// A Player
 pub type Player = u8;
@@ -142,10 +143,12 @@ impl GameState {
 
 /// Returns an iterator over the squares yet to be populated in this board
 pub fn open_board_squares(board: Board) -> impl Iterator<Item = usize> {
+    let is_won = is_board_won(&board).is_some();
     board
         .into_iter()
         .enumerate()
         .filter_map(|(idx, square)| (square == Square::None).then(|| idx))
+        .filter(move |_| !is_won)
 }
 
 /// Returns Some(winner) if these sequares are won  
