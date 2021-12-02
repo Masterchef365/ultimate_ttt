@@ -42,9 +42,9 @@ fn display_single_board(board: Board) {
 
 fn main() {
     let mut tree = HashMap::new();
-    let mut queue = vec![SingleBoardState::new()];
+    let mut queue = vec![GameState::new(vec!['X', 'O'])];
     while let Some(state) = queue.pop() {
-        display_single_board(state.board);
+        print_superboard(&state.superboard, Some(GamePrintGuides::Superboard));
         println!("--------------------------------------------------");
         if !tree.contains_key(&state) {
             let successor_states: Vec<SingleBoardState> = open_board_squares(state.board)

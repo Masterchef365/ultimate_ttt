@@ -13,7 +13,7 @@ pub type SuperBoard = [Board; 9];
 pub const EMPTY_BOARD: Board = [None; 9];
 pub const EMPTY_SUPERBOARD: SuperBoard = [EMPTY_BOARD; 9];
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Move {
     /// If the user has the choice to pick the superboard square of their next move, this is Some(index) and otherwise None
     pub superboard: Option<usize>,
