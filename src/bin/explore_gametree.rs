@@ -43,9 +43,10 @@ fn display_single_board(board: Board) {
 fn main() {
     let mut tree = HashMap::new();
     let mut queue = vec![GameState::new(&['X', 'O'])];
+    let mut i = 0;
     while let Some(state) = queue.pop() {
-        print_superboard(&state.superboard, Some(GamePrintGuides::Superboard));
-        println!("--------------------------------------------------");
+        //print_superboard(&state.superboard, Some(GamePrintGuides::Superboard));
+        //println!("--------------------------------------------------");
         if !tree.contains_key(&state) {
             let successor_states: Vec<GameState> = successors(&state)
                 .into_iter()
@@ -53,6 +54,10 @@ fn main() {
                 .collect();
             queue.extend(successor_states.iter().copied());
             tree.insert(state, successor_states);
+        }
+        i += 1;
+        if i % 10_000 == 0 {
+            println!("{}", i);
         }
     }
 }
