@@ -62,24 +62,24 @@ fn add_scores((a, b): Scores, (c, d): Scores) -> Scores {
     (a + c, b + d)
 }
 
-fn recursive_step(
-    state: SingleBoardState,
-    table: &mut StateMap,
-) -> Scores {
+fn recursive_step(state: SingleBoardState, table: &mut StateMap) -> Scores {
     let score = match state.winner() {
         Some(b'X') => (1, 0),
         Some(b'O') => (0, 1),
         _ => {
             let mut cumulative_score = (0, 0);
             for succ in state.successors() {
-                let maybe_board = invariant_states(succ).iter().filter_map(|s| table.get(s)).next();
+                let maybe_board = invariant_states(succ)
+                    .iter()
+                    .filter_map(|s| table.get(s))
+                    .next();
                 let score = match maybe_board {
                     Some(&s) => s,
                     None => recursive_step(succ, table),
                 };
                 cumulative_score = add_scores(cumulative_score, score);
             }
-            cumulative_score 
+            cumulative_score
         }
     };
     table.insert(state, score);
@@ -114,7 +114,7 @@ pub fn invariant_boards(board: Board) -> [Board; 8] {
             c, b, a, //
             f, e, d, //
             i, h, g, //
-        ] 
+        ]
     }
 
     /// Rotate clockwise 90 degrees
@@ -157,7 +157,10 @@ mod tests {
         // https://en.wikipedia.org/wiki/Tic-tac-toe#Combinatorics
         let tree = game_tree();
 
-        let distinct_games = tree.keys().filter(|s| open_board_squares(s.board).count() == 0).count();
+        let distinct_games = tree
+            .keys()
+            .filter(|s| open_board_squares(s.board).count() == 0)
+            .count();
         assert_eq!(distinct_games, 138);
 
         let x_wins = tree.keys().filter(|s| s.winner() == Some(b'X')).count();

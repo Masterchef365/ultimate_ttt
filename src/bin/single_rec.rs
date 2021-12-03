@@ -1,6 +1,8 @@
 use std::collections::HashSet;
 
-use ultimate_ttt::{single_board_solve::{game_tree, SingleBoardState, print_single, invariant_states}};
+use ultimate_ttt::single_board_solve::{
+    game_tree, invariant_states, print_single, SingleBoardState,
+};
 
 fn main() {
     let tree = game_tree();
@@ -16,7 +18,11 @@ fn main() {
         }
 
         let invariants = invariant_states(state);
-        let (x, o) = *invariants.into_iter().filter_map(|s| tree.get(&s)).next().unwrap();
+        let (x, o) = *invariants
+            .into_iter()
+            .filter_map(|s| tree.get(&s))
+            .next()
+            .unwrap();
         visited.extend(&invariants);
         queue.extend(state.successors());
 

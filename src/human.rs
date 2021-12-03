@@ -1,7 +1,7 @@
 use std::fmt::Display;
 use std::io::Write;
 
-use crate::{GameState, successors, fmt_move, print_game_state, GamePrintGuides, Move};
+use crate::{fmt_move, print_game_state, successors, GamePrintGuides, GameState, Move};
 
 pub fn human_player(state: GameState) -> Option<Move> {
     let succ = successors(&state);
@@ -76,7 +76,6 @@ fn prompt_string(msg: impl Display) -> String {
 
     line.trim_end().to_string()
 }
-
 
 #[cfg(test)]
 mod tests {

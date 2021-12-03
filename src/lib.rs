@@ -42,7 +42,7 @@ pub struct GameState {
     /// Index of the player from GameSetup::players who will make the next move
     pub next_to_play: usize,
     /// If any, the index of the superboard square the player has been sent to.
-    pub sent_to: Option<usize>, 
+    pub sent_to: Option<usize>,
     /// Number of players
     pub num_players: usize,
 }
@@ -83,7 +83,11 @@ impl GameState {
     /// Create a new game given player symbols
     pub fn new(players: &[Player]) -> Self {
         let mut players_array = [b'*'; MAX_PLAYERS];
-        assert!(players.len() <= MAX_PLAYERS, "MAX_PLAYERS ({}) exceeded.", MAX_PLAYERS);
+        assert!(
+            players.len() <= MAX_PLAYERS,
+            "MAX_PLAYERS ({}) exceeded.",
+            MAX_PLAYERS
+        );
         players_array[..players.len()].copy_from_slice(players);
 
         Self {
@@ -254,7 +258,9 @@ pub fn print_superboard(superboard: &SuperBoard, guides: Option<GamePrintGuides>
                     Some(GamePrintGuides::Board(board_idx)) if superboard_idx == board_idx => {
                         print!(" {}", board_row + 1);
                     }
-                    Some(GamePrintGuides::Superboard) if board_row == 1 && superboard_column_idx == 0 => {
+                    Some(GamePrintGuides::Superboard)
+                        if board_row == 1 && superboard_column_idx == 0 =>
+                    {
                         print!("{} ", superboard_row_idx + 1);
                     }
                     _ => print!("  "),
@@ -295,49 +301,21 @@ mod tests {
 
     #[test]
     fn test_is_board_won() {
-        assert!(is_board_won(&board_shorthand(
-            *b"---------"
-        ))
-        .is_none());
+        assert!(is_board_won(&board_shorthand(*b"---------")).is_none());
 
-        assert!(is_board_won(&board_shorthand(
-            *b"----X----"
-        ))
-        .is_none());
+        assert!(is_board_won(&board_shorthand(*b"----X----")).is_none());
 
-        assert!(is_board_won(&board_shorthand(
-            *b"O---X---O"
-        ))
-        .is_none());
+        assert!(is_board_won(&board_shorthand(*b"O---X---O")).is_none());
 
-        assert!(is_board_won(&board_shorthand(
-*b"X-X-X---O"
-))
-        .is_none());
+        assert!(is_board_won(&board_shorthand(*b"X-X-X---O")).is_none());
 
-        assert!(
-            is_board_won(&board_shorthand(
-*b"X-X-X---X"
-))==Some(b'X')
-        );
+        assert!(is_board_won(&board_shorthand(*b"X-X-X---X")) == Some(b'X'));
 
-        assert!(
-            is_board_won(&board_shorthand(
-*b"O-X-X-X-X"
-))==Some(b'X')
-        );
+        assert!(is_board_won(&board_shorthand(*b"O-X-X-X-X")) == Some(b'X'));
 
-        assert!(
-            is_board_won(&board_shorthand(
-*b"O-X-XXO-X"
-))==Some(b'X')
-        );
+        assert!(is_board_won(&board_shorthand(*b"O-X-XXO-X")) == Some(b'X'));
 
-        assert!(
-            is_board_won(&board_shorthand(
-*b"XXX-O-O--"
-))==Some(b'X')
-        );
+        assert!(is_board_won(&board_shorthand(*b"XXX-O-O--")) == Some(b'X'));
     }
 
     #[test]

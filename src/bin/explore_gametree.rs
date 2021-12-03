@@ -1,6 +1,5 @@
 use std::{collections::HashMap, time::Instant};
-use ultimate_ttt::{GameState, successors, is_superboard_won};
-
+use ultimate_ttt::{is_superboard_won, successors, GameState};
 
 fn main() {
     let mut tree = HashMap::new();
@@ -9,7 +8,6 @@ fn main() {
     let mut complete_games = 0;
     let mut o_wins = 0;
     let mut x_wins = 0;
-
 
     let start = Instant::now();
     while let Some(state) = queue.pop() {
@@ -38,7 +36,15 @@ fn main() {
         if i % 10_000 == 0 {
             let elapsed = start.elapsed().as_secs_f32();
             let rate = i as f32 / elapsed;
-            println!("{:2} / sec, idx: {}, tree: {}, complete: {}, O/X: {}/{}", rate, i, tree.len(), complete_games, o_wins, x_wins);
+            println!(
+                "{:2} / sec, idx: {}, tree: {}, complete: {}, O/X: {}/{}",
+                rate,
+                i,
+                tree.len(),
+                complete_games,
+                o_wins,
+                x_wins
+            );
         }
     }
 }
