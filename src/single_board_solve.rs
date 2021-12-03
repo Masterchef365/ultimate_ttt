@@ -72,13 +72,12 @@ fn recursive_step(
         _ => {
             let mut cumulative_score = (0, 0);
             for succ in state.successors() {
-                if !invariant_states(succ).iter().any(|s| table.contains_key(s)) {
-                    let score = match table.get(&succ) {
-                        Some(&s) => s,
-                        None => recursive_step(succ, table),
-                    };
-                    cumulative_score = add_scores(cumulative_score, score);
-                }
+                let maybe_board = invariant_states(succ).iter().filter_map(|s| table.get(s)).next();
+                let score = match maybe_board {
+                    Some(&s) => s,
+                    None => recursive_step(succ, table),
+                };
+                cumulative_score = add_scores(cumulative_score, score);
             }
             cumulative_score 
         }
@@ -87,7 +86,7 @@ fn recursive_step(
     score
 }
 
-fn invariant_states(state: SingleBoardState) -> [SingleBoardState; 8] {
+pub fn invariant_states(state: SingleBoardState) -> [SingleBoardState; 8] {
     invariant_boards(state.board).map(|board| SingleBoardState::from_board(board, state.x_is_next))
 }
 
@@ -99,7 +98,7 @@ fn invariant_states(state: SingleBoardState) -> [SingleBoardState; 8] {
     ]
 */
 
-fn invariant_boards(board: Board) -> [Board; 8] {
+pub fn invariant_boards(board: Board) -> [Board; 8] {
     /// Vertical flip
     fn vertical_flip([a, b, c, d, e, f, g, h, i]: Board) -> Board {
         [
@@ -155,9 +154,16 @@ mod tests {
 
     #[test]
     fn test_combinatorics() {
+        // https://en.wikipedia.org/wiki/Tic-tac-toe#Combinatorics
         let tree = game_tree();
+
         let distinct_games = tree.keys().filter(|s| open_board_squares(s.board).count() == 0).count();
+        assert_eq!(distinct_games, 138);
+
         let x_wins = tree.keys().filter(|s| s.winner() == Some(b'X')).count();
+        assert_eq!(x_wins, 91);
+
         let o_wins = tree.keys().filter(|s| s.winner() == Some(b'O')).count();
+        assert_eq!(o_wins, 44);
     }
 }
