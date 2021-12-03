@@ -1,5 +1,6 @@
 pub mod ai;
 pub mod human;
+pub mod single_board_solve;
 
 /// A Player
 pub type Player = u8;
