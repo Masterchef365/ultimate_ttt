@@ -76,3 +76,22 @@ fn prompt_string(msg: impl Display) -> String {
 
     line.trim_end().to_string()
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_coord() {
+        assert_eq!(parse_coord("A1".into()), Some(0));
+        assert_eq!(parse_coord("1A".into()), Some(0));
+        assert_eq!(parse_coord("3A".into()), Some(6));
+        assert_eq!(parse_coord("2B".into()), Some(4));
+        assert_eq!(parse_coord("3C".into()), Some(8));
+        assert_eq!(parse_coord("B".into()), None);
+        assert_eq!(parse_coord("1".into()), None);
+        assert_eq!(parse_coord("A0".into()), None);
+        assert_eq!(parse_coord("".into()), None);
+    }
+}

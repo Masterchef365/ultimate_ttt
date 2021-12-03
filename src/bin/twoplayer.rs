@@ -1,36 +1,9 @@
-use std::{fmt::Display, io::Write};
-use ultimate_ttt::{self::*, human::human_player};
+use ultimate_ttt::{human::human_player, ai::two_player_game, print_game_state, is_superboard_won};
 
 fn main() {
-    let mut state = GameState::new(b"XO");
-    loop {
-        let mov = human_player(state);
-        state = state.apply_move(mov);
-
-        if let Some(winner) = is_superboard_won(&state.superboard) {
-            println!("{} wins!", winner);
-            print_game_state(&state, None);
-            break;
-        }
-    }
-}
-
-//let an_int: u32 = prompt_parse("Please enter a u32", |s| s.parse().ok());
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_parse_coord() {
-        assert_eq!(parse_coord("A1".into()), Some(0));
-        assert_eq!(parse_coord("1A".into()), Some(0));
-        assert_eq!(parse_coord("3A".into()), Some(6));
-        assert_eq!(parse_coord("2B".into()), Some(4));
-        assert_eq!(parse_coord("3C".into()), Some(8));
-        assert_eq!(parse_coord("B".into()), None);
-        assert_eq!(parse_coord("1".into()), None);
-        assert_eq!(parse_coord("A0".into()), None);
-        assert_eq!(parse_coord("".into()), None);
+    let state = two_player_game(human_player, human_player);
+    print_game_state(&state, None);
+    if let Some(winner) = is_superboard_won(&state.superboard) {
+        println!("{} wins!", winner);
     }
 }

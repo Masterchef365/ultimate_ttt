@@ -1,4 +1,4 @@
-use ultimate_ttt::{ai::{debug_player, random_move, two_player_game}, human::human_player};
+use ultimate_ttt::{ai::{random_move, two_player_game}, human::human_player};
 
 fn main() {
     two_player_game(

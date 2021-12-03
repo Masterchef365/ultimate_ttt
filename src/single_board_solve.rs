@@ -148,3 +148,16 @@ fn invariant_boards(board: Board) -> [Board; 8] {
         rotate_counterclockwise(horiz_flipped),
     ]
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_combinatorics() {
+        let tree = game_tree();
+        let distinct_games = tree.keys().filter(|s| open_board_squares(s.board).count() == 0).count();
+        let x_wins = tree.keys().filter(|s| s.winner() == Some(b'X')).count();
+        let o_wins = tree.keys().filter(|s| s.winner() == Some(b'O')).count();
+    }
+}
